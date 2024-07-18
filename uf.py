@@ -4,7 +4,7 @@ from typing import Optional
 
 counter = iter(range(1000))
 
-all_instrs = []
+all_instrs = {}
 
 @dataclasses.dataclass
 class Op:
@@ -12,7 +12,7 @@ class Op:
     forwarded: Optional[Op] = dataclasses.field(default=None, init=False)
 
     def __post_init__(self):
-        all_instrs.append(self)
+        all_instrs[self.name()] = self
 
     def find(self):
         result = self
@@ -72,7 +72,7 @@ class Eq(Op):
 
 def equivalence_classes():
     result = {}
-    for instr in all_instrs:
+    for instr in all_instrs.values():
         result.setdefault(instr.find().name(), set()).add(instr.name())
     return result
 
