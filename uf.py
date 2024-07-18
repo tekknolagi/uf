@@ -77,15 +77,38 @@ def equivalence_classes():
     return result
 
 
+def match_add_1():
+    # Find matches for add(x, 1) or add(1, x)
+    eq = equivalence_classes()
+    result = []
+    instrs = all_instrs.copy()
+    for instr in instrs.values():
+        if not isinstance(instr, Add):
+            continue
+        for left_name in eq.get(instr.left.find().name(), []):
+            for right_name in eq.get(instr.right.find().name(), []):
+                left = all_instrs[left_name]
+                right = all_instrs[right_name]
+                if isinstance(left, Const) and left.value == 1:
+                    result.append(Add(left, right))
+                if isinstance(right, Const) and right.value == 1:
+                    result.append(Add(left, right))
+    return result
+
+
 trace = [
     x := Var("x"),
     y := Var("y"),
     a := Add(x, Const(1)),
     b := Add(y, Const(1)),
     c := Add(y, Const(1)),
+    Add(a, b),
+    Add(c, Const(2)),
 ]
 print(equivalence_classes())
 a.make_equal_to(b)
 print(equivalence_classes())
+for op in match_add_1():
+    print(op)
 for op in trace:
     print(f"{op.name()} = {op.find()}")
