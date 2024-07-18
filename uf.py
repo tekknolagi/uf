@@ -4,10 +4,15 @@ from typing import Optional
 
 counter = iter(range(1000))
 
+all_instrs = []
+
 @dataclasses.dataclass
 class Op:
     id: int = dataclasses.field(default_factory=lambda: next(counter), init=False)
     forwarded: Optional[Op] = dataclasses.field(default=None, init=False)
+
+    def __post_init__(self):
+        all_instrs.append(self)
 
     def find(self):
         result = self
@@ -65,6 +70,13 @@ class Eq(Op):
         return f"{self.left.name()} == {self.right.name()}"
 
 
+def equivalence_classes():
+    result = {}
+    for instr in all_instrs:
+        result.setdefault(instr.find().name(), set()).add(instr.name())
+    return result
+
+
 trace = [
     x := Var("x"),
     y := Var("y"),
@@ -72,6 +84,8 @@ trace = [
     b := Add(y, Const(1)),
     c := Add(y, Const(1)),
 ]
+print(equivalence_classes())
 a.make_equal_to(b)
+print(equivalence_classes())
 for op in trace:
     print(f"{op.name()} = {op}")
