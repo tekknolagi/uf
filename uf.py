@@ -88,4 +88,4 @@ print(equivalence_classes())
 a.make_equal_to(b)
 print(equivalence_classes())
 for op in trace:
-    print(f"{op.name()} = {op}")
+    print(f"{op.name()} = {op.find()}")
