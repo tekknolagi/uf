@@ -77,38 +77,40 @@ def equivalence_classes():
     return result
 
 
-def match_add_1():
-    # Find matches for add(x, 1) or add(1, x)
+def match(pred):
     eq = equivalence_classes()
-    result = []
+    result = set()
+    for instr in all_instrs.values():
+        if pred(instr):
+            result.update(eq[instr.find().name()])
+    return [all_instrs[name] for name in result]
+
+
+def is_add_1(instr):
+    eq = equivalence_classes()
     instrs = all_instrs.copy()
-    for instr in instrs.values():
-        if not isinstance(instr, Add):
+    for instr_name in eq.get(instr.find().name(), []):
+        op = instrs[instr_name]
+        if not isinstance(op, Add):
             continue
-        for left_name in eq.get(instr.left.find().name(), []):
-            for right_name in eq.get(instr.right.find().name(), []):
-                left = all_instrs[left_name]
-                right = all_instrs[right_name]
-                if isinstance(left, Const) and left.value == 1:
-                    result.append(Add(left, right))
-                if isinstance(right, Const) and right.value == 1:
-                    result.append(Add(left, right))
-    return result
+        for left_name in eq.get(op.left.find().name(), []):
+            for right_name in eq.get(op.right.find().name(), []):
+                match (instrs[left_name], instrs[right_name]):
+                    case (Const(1), _) | (_, Const(1)):
+                        return True
+    return False
 
 
 trace = [
     x := Var("x"),
     y := Var("y"),
-    a := Add(x, Const(1)),
-    b := Add(y, Const(1)),
-    c := Add(y, Const(1)),
-    Add(a, b),
-    Add(c, Const(2)),
+    z := Var("z"),
+    xy := Add(x, y),
 ]
-print(equivalence_classes())
-a.make_equal_to(b)
-print(equivalence_classes())
-for op in match_add_1():
+for instr in trace:
+    print(f"{instr.name()} = {instr}")
+print("---")
+y.make_equal_to(Const(1))
+z.make_equal_to(xy)
+for op in match(is_add_1):
     print(op)
-for op in trace:
-    print(f"{op.name()} = {op.find()}")
